@@ -18,7 +18,7 @@ class MarkdownRenderer extends StatelessWidget {
         codeblockDecoration: BoxDecoration(
           color: theme.brightness == Brightness.dark
               ? const Color(0xFF141414)
-              : const Color(0xFF222222),
+              : const Color(0xFFF3F4F6),
           borderRadius: BorderRadius.circular(8),
         ),
         codeblockPadding: const EdgeInsets.all(12),

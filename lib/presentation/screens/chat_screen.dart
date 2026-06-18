@@ -1,9 +1,14 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/models/conversation_model.dart';
 import '../providers/chat_provider.dart';
 import '../providers/conversation_provider.dart';
+import '../providers/settings_provider.dart';
 import '../widgets/chat_input_bar.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/typing_indicator.dart';
@@ -35,8 +40,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer2<ConversationProvider, ChatProvider>(
-      builder: (_, conversations, chat, __) {
+    return Consumer3<ConversationProvider, ChatProvider, SettingsProvider>(
+      builder: (_, conversations, chat, settings, __) {
         final current = conversations.conversations
             .where((e) => e.id == widget.conversation.id)
             .toList();
@@ -53,7 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             actions: [
               PopupMenuButton<String>(
-                onSelected: (value) => _onMenu(value, conversation.id),
+                onSelected: (value) => _onMenu(value, conversation),
                 itemBuilder: (_) => const [
                   PopupMenuItem(value: 'rename', child: Text('Rename')),
                   PopupMenuItem(value: 'delete', child: Text('Delete')),
@@ -93,10 +98,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 isResponding: chat.isResponding,
                 attachedFileName: chat.attachedFileName,
                 onAttachmentRemove: chat.clearAttachment,
+                placeholderText:
+                    settings.language == 'ar' ? 'اكتب رسالة...' : 'Write a message...',
                 onFileAttached: (name, content) =>
                     chat.attachFile(fileName: name, content: content),
                 onSend: chat.sendMessage,
-                onStop: () => chat.cancelStreaming(),
+                onStop: chat.cancelStreaming,
               ),
             ],
           ),
@@ -135,23 +142,44 @@ class _ChatScreenState extends State<ChatScreen> {
     await context.read<ConversationProvider>().renameConversation(id, value);
   }
 
-  Future<void> _onMenu(String value, String id) async {
+  Future<void> _onMenu(String value, ConversationModel conversation) async {
     final provider = context.read<ConversationProvider>();
     switch (value) {
       case 'rename':
-        await _renameConversation(context, id);
+        await _renameConversation(context, conversation.id);
         break;
       case 'delete':
-        await provider.deleteConversation(id);
+        await provider.deleteConversation(conversation.id);
         if (mounted) Navigator.pop(context);
         break;
       case 'share':
-      case 'export':
+        await Clipboard.setData(
+          ClipboardData(text: _conversationAsText(conversation)),
+        );
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$value will be available soon')),
+          const SnackBar(content: Text('Conversation copied to clipboard')),
+        );
+        break;
+      case 'export':
+        final dir = await getApplicationDocumentsDirectory();
+        final safeTitle = conversation.title.replaceAll(RegExp(r'[^\\w\\s-]'), '_');
+        final file = File('${dir.path}/$safeTitle.txt');
+        await file.writeAsString(_conversationAsText(conversation));
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported to ${file.path}')),
         );
         break;
     }
+  }
+
+  String _conversationAsText(ConversationModel conversation) {
+    final buffer = StringBuffer();
+    for (final message in conversation.messages) {
+      buffer.writeln('${message.role.toUpperCase()}: ${message.content}');
+      buffer.writeln();
+    }
+    return buffer.toString();
   }
 }

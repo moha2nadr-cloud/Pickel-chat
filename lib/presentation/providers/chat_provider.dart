@@ -100,9 +100,12 @@ class ChatProvider extends ChangeNotifier {
       );
       notifyListeners();
     }, onError: (error) async {
+      final errorPrefix = settingsProvider.language == 'ar'
+          ? 'حدث خطأ. حاول مرة أخرى.'
+          : 'An error occurred. Please try again.';
       await conversationProvider.updateLastAssistantMessage(
         conversation.id,
-        'حدث خطأ. حاول مرة أخرى.\n$error',
+        '$errorPrefix\n$error',
       );
       _isResponding = false;
       notifyListeners();

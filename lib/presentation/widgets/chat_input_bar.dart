@@ -13,6 +13,7 @@ class ChatInputBar extends StatefulWidget {
     required this.onFileAttached,
     this.attachedFileName,
     required this.onAttachmentRemove,
+    required this.placeholderText,
   });
 
   final bool isResponding;
@@ -21,6 +22,7 @@ class ChatInputBar extends StatefulWidget {
   final Future<void> Function(String name, String content) onFileAttached;
   final String? attachedFileName;
   final VoidCallback onAttachmentRemove;
+  final String placeholderText;
 
   @override
   State<ChatInputBar> createState() => _ChatInputBarState();
@@ -63,8 +65,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     minLines: 1,
                     maxLines: 6,
                     onChanged: (_) => setState(() {}),
-                    decoration: const InputDecoration(
-                      hintText: 'اكتب رسالة...',
+                    decoration: InputDecoration(
+                      hintText: widget.placeholderText,
                     ),
                   ),
                 ),

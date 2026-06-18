@@ -14,6 +14,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _hideKey = true;
   final _controller = TextEditingController();
+  String _lastAppliedApiKey = '';
 
   @override
   void dispose() {
@@ -25,7 +26,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Consumer<SettingsProvider>(
       builder: (_, settings, __) {
-        _controller.value = TextEditingValue(text: settings.apiKey);
+        if (settings.apiKey != _lastAppliedApiKey && !_controller.hasFocus) {
+          _lastAppliedApiKey = settings.apiKey;
+          _controller.text = settings.apiKey;
+        }
         return Scaffold(
           appBar: AppBar(title: const Text('Settings')),
           body: ListView(
@@ -41,7 +45,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: () => setState(() => _hideKey = !_hideKey),
                   ),
                 ),
-                onChanged: settings.updateApiKey,
+                onChanged: (value) {
+                  _lastAppliedApiKey = value;
+                  settings.updateApiKey(value);
+                },
               ),
               const SizedBox(height: 12),
               FilledButton(

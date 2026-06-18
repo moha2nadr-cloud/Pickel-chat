@@ -14,7 +14,7 @@ class ApiService {
     final response = await _client.post(
       Uri.parse('${ApiConstants.baseUrl}${ApiConstants.chatCompletions}'),
       headers: {
-        'Authorization': ['Be', 'arer ', apiKey].join(),
+        'Authorization': 'Bearer $apiKey',
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
@@ -38,7 +38,7 @@ class ApiService {
       Uri.parse('${ApiConstants.baseUrl}${ApiConstants.chatCompletions}'),
     )
       ..headers.addAll({
-        'Authorization': ['Be', 'arer ', apiKey].join(),
+        'Authorization': 'Bearer $apiKey',
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
       })
